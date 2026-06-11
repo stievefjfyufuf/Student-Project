@@ -31,6 +31,7 @@ function cacheElements() {
 function bindEvents() {
   elements.courseForm.addEventListener("submit", handleCourseSubmit);
   elements.studySessionForm.addEventListener("submit", handleStudySessionSubmit);
+  elements.studySessionList.addEventListener("click", handleStudySessionListClick);
 }
 
 function handleCourseSubmit(event) {
@@ -72,6 +73,24 @@ function handleStudySessionSubmit(event) {
   elements.studySessionForm.reset();
   renderStudySessionList();
   showSuccess("Study Session berhasil ditambahkan.");
+}
+
+function handleStudySessionListClick(event) {
+  const completeButton = event.target.closest("[data-complete-session-id]");
+
+  if (!completeButton) {
+    return;
+  }
+
+  const result = markStudySessionCompleted(completeButton.dataset.completeSessionId);
+
+  if (!result.ok) {
+    showError(result.message);
+    return;
+  }
+
+  renderStudySessionList();
+  showSuccess("Study Session berhasil ditandai sebagai Completed.");
 }
 
 function createCourse(name) {
@@ -185,6 +204,32 @@ function createStudySession(data) {
   };
 }
 
+function markStudySessionCompleted(studySessionId) {
+  const studySession = state.studySessions.find((session) => session.id === studySessionId);
+
+  if (!studySession) {
+    return {
+      ok: false,
+      message: "Study Session tidak ditemukan.",
+    };
+  }
+
+  if (studySession.status === "completed") {
+    return {
+      ok: false,
+      message: "Study Session sudah Completed.",
+    };
+  }
+
+  studySession.status = "completed";
+  saveStudySessions(state.studySessions);
+
+  return {
+    ok: true,
+    studySession,
+  };
+}
+
 function renderCourseList() {
   if (state.courses.length === 0) {
     elements.courseList.innerHTML = '<li class="empty-state">Belum ada Course.</li>';
@@ -216,15 +261,19 @@ function renderStudySessionList() {
 function renderStudySessionCard(studySession) {
   const course = state.courses.find((item) => item.id === studySession.courseId);
   const courseName = course ? course.name : "Course tidak ditemukan";
+  const isCompleted = studySession.status === "completed";
+  const actionMarkup = isCompleted
+    ? '<p class="completed-note">Completed</p>'
+    : `<button type="button" data-complete-session-id="${studySession.id}">Mark as Completed</button>`;
 
   return `
-    <article class="study-session-card">
+    <article class="study-session-card ${isCompleted ? "completed" : ""}">
       <div class="session-card-header">
         <div>
           <h3>${escapeHtml(courseName)}</h3>
           <p class="session-topic">${escapeHtml(studySession.topic)}</p>
         </div>
-        <span class="status-badge pending">${escapeHtml(studySession.status)}</span>
+        <span class="status-badge ${isCompleted ? "completed" : "pending"}">${escapeHtml(studySession.status)}</span>
       </div>
 
       <div class="session-meta">
@@ -232,6 +281,8 @@ function renderStudySessionCard(studySession) {
         <span>Time <strong>${escapeHtml(studySession.time)}</strong></span>
         <span>Duration <strong>${studySession.duration} min</strong></span>
       </div>
+
+      ${actionMarkup}
     </article>
   `;
 }
