@@ -1,7 +1,5 @@
-const STORAGE_KEYS = {
-  courses: "studyPlanner.courses",
-  studySessions: "studyPlanner.studySessions",
-};
+const COURSE_STORAGE_KEY = "courses";
+const STUDY_SESSION_STORAGE_KEY = "studySessions";
 
 const state = {
   courses: [],
@@ -23,6 +21,7 @@ function initApp() {
 function cacheElements() {
   elements.errorMessage = document.querySelector("#error-message");
   elements.courseForm = document.querySelector("#course-form");
+  elements.courseNameInput = document.querySelector("#course-name");
   elements.courseList = document.querySelector("#course-list");
   elements.studySessionForm = document.querySelector("#study-session-form");
   elements.studySessionList = document.querySelector("#study-session-list");
@@ -38,9 +37,7 @@ function bindEvents() {
 function handleCourseSubmit(event) {
   event.preventDefault();
 
-  const formData = new FormData(elements.courseForm);
-  const courseName = String(formData.get("courseName") || "").trim();
-
+  const courseName = elements.courseNameInput.value.trim();
   const result = createCourse(courseName);
 
   if (!result.ok) {
@@ -58,7 +55,7 @@ function handleStudySessionSubmit(event) {
   event.preventDefault();
 
   const formData = new FormData(elements.studySessionForm);
-  const sessionData = {
+  const studySessionData = {
     courseId: String(formData.get("courseId") || ""),
     date: String(formData.get("date") || ""),
     time: String(formData.get("time") || ""),
@@ -66,7 +63,7 @@ function handleStudySessionSubmit(event) {
     topic: String(formData.get("topic") || "").trim(),
   };
 
-  const result = createStudySession(sessionData);
+  const result = createStudySession(studySessionData);
 
   if (!result.ok) {
     showError(result.message);
@@ -79,14 +76,13 @@ function handleStudySessionSubmit(event) {
 }
 
 function handleStudySessionListClick(event) {
-  const button = event.target.closest("[data-complete-session-id]");
+  const completeButton = event.target.closest("[data-complete-session-id]");
 
-  if (!button) {
+  if (!completeButton) {
     return;
   }
 
-  const sessionId = button.dataset.completeSessionId;
-  const result = markStudySessionCompleted(sessionId);
+  const result = markStudySessionCompleted(completeButton.dataset.completeSessionId);
 
   if (!result.ok) {
     showError(result.message);
@@ -94,112 +90,157 @@ function handleStudySessionListClick(event) {
   }
 
   renderStudySessionList();
-  showSuccess("Study Session ditandai sebagai Completed.");
+  showSuccess("Study Session berhasil ditandai sebagai Completed.");
+}
+
+function createCourse(name) {
+  if (!name) {
+    return {
+      ok: false,
+      message: "Nama Course tidak boleh kosong.",
+    };
+  }
+
+  const isDuplicate = courses.some(
+    (course) => course.name.toLowerCase() === name.toLowerCase()
+  );
+
+  if (isDuplicate) {
+    return {
+      ok: false,
+      message: "Course dengan nama tersebut sudah ada.",
+    };
+  }
+
+  const updatedCourses = addCourse(state.courses, name);
+  const course = updatedCourses[updatedCourses.length - 1];
+
+  state.courses = updatedCourses;
+  saveCourses(state.courses);
+
+  return {
+    ok: true,
+    course,
+  };
+}
+
+function addCourse(courses, name) {
+  const course = {
+    id: createCourseId(),
+    name,
+  };
+
+  return [...courses, course];
 }
 
 function loadCourses() {
-  return loadFromStorage(STORAGE_KEYS.courses);
-}
-
-function saveCourses(courses) {
-  saveToStorage(STORAGE_KEYS.courses, courses);
-}
-
-function loadStudySessions() {
-  return loadFromStorage(STORAGE_KEYS.studySessions);
-}
-
-function saveStudySessions(studySessions) {
-  saveToStorage(STORAGE_KEYS.studySessions, studySessions);
-}
-
-function loadFromStorage(key) {
   try {
-    const storedValue = localStorage.getItem(key);
-    return storedValue ? JSON.parse(storedValue) : [];
+    const storedCourses = localStorage.getItem(COURSE_STORAGE_KEY);
+    return storedCourses ? JSON.parse(storedCourses) : [];
   } catch (error) {
     return [];
   }
 }
 
-function saveToStorage(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+function saveCourses(courses) {
+  localStorage.setItem(COURSE_STORAGE_KEY, JSON.stringify(courses));
 }
 
-function createCourse(name) {
-  if (!name) {
-    return { ok: false, message: "Nama Course tidak boleh kosong." };
+function loadStudySessions() {
+  try {
+    const storedStudySessions = localStorage.getItem(STUDY_SESSION_STORAGE_KEY);
+    return storedStudySessions ? JSON.parse(storedStudySessions) : [];
+  } catch (error) {
+    return [];
   }
+}
 
-  const isDuplicate = state.courses.some(
-    (course) => course.name.toLowerCase() === name.toLowerCase()
-  );
-
-  if (isDuplicate) {
-    return { ok: false, message: "Course dengan nama tersebut sudah ada." };
-  }
-
-  const course = {
-    id: createId("course"),
-    name,
-  };
-
-  state.courses.push(course);
-  saveCourses(state.courses);
-
-  return { ok: true, course };
+function saveStudySessions(studySessions) {
+  localStorage.setItem(STUDY_SESSION_STORAGE_KEY, JSON.stringify(studySessions));
 }
 
 function createStudySession(data) {
   const duration = Number(data.duration);
 
   if (!data.courseId || !data.date || !data.time || !data.duration || !data.topic) {
-    return { ok: false, message: "Semua field Study Session wajib diisi." };
+    return {
+      ok: false,
+      message: "Semua field Study Session wajib diisi.",
+    };
   }
 
-  if (!state.courses.some((course) => course.id === data.courseId)) {
-    return { ok: false, message: "Course yang dipilih tidak valid." };
+  const courseExists = state.courses.some((course) => course.id === data.courseId);
+
+  if (!courseExists) {
+    return {
+      ok: false,
+      message: "Course yang dipilih tidak valid.",
+    };
   }
 
   if (!Number.isFinite(duration) || duration <= 0) {
-    return { ok: false, message: "Durasi harus lebih dari 0 menit." };
+    return {
+      ok: false,
+      message: "Durasi harus lebih dari 0 menit.",
+    };
   }
 
   if (isPastDate(data.date)) {
-    return { ok: false, message: "Tanggal belajar tidak boleh di masa lalu." };
+    return {
+      ok: false,
+      message: "Tanggal belajar tidak boleh di masa lalu.",
+    };
   }
 
   const studySession = {
-    id: createId("session"),
+    id: createStudySessionId(),
     courseId: data.courseId,
     date: data.date,
     time: data.time,
     duration,
     topic: data.topic,
-    status: "Pending",
+    status: "pending",
   };
 
   state.studySessions.push(studySession);
   saveStudySessions(state.studySessions);
 
-  return { ok: true, studySession };
+  return {
+    ok: true,
+    studySession,
+  };
 }
 
-function markStudySessionCompleted(sessionId) {
-  const session = state.studySessions.find((item) => item.id === sessionId);
+function markStudySessionCompleted(studySessionId) {
+  const studySession = state.studySessions.find((session) => session.id === studySessionId);
 
-  if (!session) {
-    return { ok: false, message: "Study Session tidak ditemukan." };
+  if (!studySession) {
+    return {
+      ok: false,
+      message: "Study Session tidak ditemukan.",
+    };
   }
 
-  if (session.status === "Completed") {
-    return { ok: false, message: "Study Session sudah Completed." };
+  if (studySession.status === "completed") {
+    return {
+      ok: false,
+      message: "Study Session sudah Completed.",
+    };
   }
 
-  session.status = "Completed";
+  state.studySessions = markSessionCompleted(state.studySessions, studySessionId);
   saveStudySessions(state.studySessions);
 
-  return { ok: true, studySession: session };
+  return {
+    ok: true,
+    studySession: state.studySessions.find((session) => session.id === studySessionId),
+  };
+}
+
+function markSessionCompleted(sessions, studySessionId) {
+  return sessions.map((session) =>
+    session.id === studySessionId ? { ...session, status: "completed" } : session
+  );
 }
 
 function renderCourseList() {
@@ -230,28 +271,28 @@ function renderStudySessionList() {
   elements.studySessionList.innerHTML = state.studySessions.map(renderStudySessionCard).join("");
 }
 
-function renderStudySessionCard(session) {
-  const course = state.courses.find((item) => item.id === session.courseId);
+function renderStudySessionCard(studySession) {
+  const course = state.courses.find((item) => item.id === studySession.courseId);
   const courseName = course ? course.name : "Course tidak ditemukan";
-  const isCompleted = session.status === "Completed";
+  const isCompleted = studySession.status === "completed";
   const actionMarkup = isCompleted
     ? '<p class="completed-note">Completed</p>'
-    : `<button type="button" data-complete-session-id="${session.id}">Mark as Completed</button>`;
+    : `<button type="button" data-complete-session-id="${studySession.id}">Mark as Completed</button>`;
 
   return `
     <article class="study-session-card ${isCompleted ? "completed" : ""}">
       <div class="session-card-header">
         <div>
           <h3>${escapeHtml(courseName)}</h3>
-          <p class="session-topic">${escapeHtml(session.topic)}</p>
+          <p class="session-topic">${escapeHtml(studySession.topic)}</p>
         </div>
-        <span class="status-badge ${isCompleted ? "completed" : "pending"}">${session.status}</span>
+        <span class="status-badge ${isCompleted ? "completed" : "pending"}">${escapeHtml(studySession.status)}</span>
       </div>
 
       <div class="session-meta">
-        <span>Date <strong>${formatDate(session.date)}</strong></span>
-        <span>Time <strong>${session.time}</strong></span>
-        <span>Duration <strong>${session.duration} min</strong></span>
+        <span>Date <strong>${formatDate(studySession.date)}</strong></span>
+        <span>Time <strong>${escapeHtml(studySession.time)}</strong></span>
+        <span>Duration <strong>${studySession.duration} min</strong></span>
       </div>
 
       ${actionMarkup}
@@ -271,26 +312,28 @@ function showSuccess(message) {
   elements.errorMessage.classList.remove("has-error");
 }
 
-function clearError() {
-  elements.errorMessage.textContent = "Belum ada error.";
-  elements.errorMessage.classList.remove("has-error");
-  elements.errorMessage.classList.remove("has-success");
-}
-
-function createId(prefix) {
+function createCourseId() {
   if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
-    return `${prefix}-${globalThis.crypto.randomUUID()}`;
+    return `course-${globalThis.crypto.randomUUID()}`;
   }
 
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `course-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function createStudySessionId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+    return `session-${globalThis.crypto.randomUUID()}`;
+  }
+
+  return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function isPastDate(dateValue) {
   const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
-  const todayValue = `${yyyy}-${mm}-${dd}`;
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  const todayValue = `${year}-${month}-${day}`;
 
   return dateValue < todayValue;
 }
@@ -299,7 +342,7 @@ function formatDate(dateValue) {
   const [year, month, day] = dateValue.split("-");
 
   if (!year || !month || !day) {
-    return dateValue;
+    return escapeHtml(dateValue);
   }
 
   return `${day}/${month}/${year}`;
@@ -314,4 +357,13 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-document.addEventListener("DOMContentLoaded", initApp);
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", initApp);
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    addCourse,
+    markSessionCompleted,
+  };
+}

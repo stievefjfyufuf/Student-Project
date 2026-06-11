@@ -1,47 +1,55 @@
-# Reflection on AI Usage
+# Reflection
 
-## How did you use AI during requirements clarification?
+## Bagaimana saya menggunakan AI saat requirements clarification?
 
-Saya menggunakan AI dengan gaya grill-me untuk mengklarifikasi ide Study Planner. AI menanyakan pertanyaan tentang target user, problem statement, workflow, batasan fitur, dan success criteria. Dari proses tersebut, saya memilih scope Manual Study Planner untuk v1.
+Saya menggunakan AI sebagai interviewer Software Engineering yang ketat untuk memperjelas ide Study Planner. AI membantu menanyakan hal-hal penting seperti target user, tujuan aplikasi, workflow, batasan, edge case, dan success criteria. Dari proses itu, scope project menjadi lebih jelas dan realistis untuk dikerjakan dalam dua hari.
 
-## How did you use AI during PRD creation?
+## Bagaimana saya menggunakan AI saat membuat PRD?
 
-Saya menggunakan AI untuk membantu mengubah hasil klarifikasi menjadi PRD. Saya memeriksa kembali bagian goals, non-goals, user stories, acceptance criteria, dan out-of-scope items agar sesuai dengan project dua hari.
+Saya menggunakan AI untuk mengubah hasil klarifikasi requirements menjadi Product Requirements Document atau PRD. PRD tersebut berisi product overview, goals, non-goals, target users, user stories, core features, acceptance criteria, success criteria, risks, dan out-of-scope items.
 
-## How did you use AI during issue breakdown?
+## Bagaimana saya menggunakan AI saat membuat issue breakdown?
 
-Saya menggunakan AI untuk memecah PRD menjadi vertical-slice issues. Saya memastikan setiap issue berfokus pada behavior yang terlihat oleh user, bukan hanya berdasarkan layer teknis seperti frontend atau database.
+Saya menggunakan AI untuk memecah PRD menjadi vertical-slice issues. Issue dibuat berdasarkan behavior yang bisa dilihat user, seperti membuat Course, melihat Course List, membuat Study Session, melihat Study Session List, menandai Completed, dan menampilkan validation errors.
 
-## How did you use AI during coding?
+## Bagaimana saya menggunakan AI saat design?
 
-Saya menggunakan AI untuk membantu merancang struktur file, membuat logic JavaScript, dan memahami penggunaan LocalStorage. Saya tetap memeriksa kode dan menjalankan aplikasi secara manual di browser.
+Saya menggunakan AI untuk membantu membuat design document sebelum coding. Design tersebut mencakup user flow, wireframe sederhana, component breakdown, data model, file structure, technology stack decision, dan trade-offs.
 
-## How did you use AI during testing?
+## Bagaimana saya menggunakan AI saat coding?
 
-Saya menggunakan AI untuk membantu menentukan fitur yang cocok diuji dengan TDD dan membuat checklist browser testing. Saya melakukan verifikasi manual untuk memastikan hasilnya sesuai acceptance criteria.
+Saya menggunakan AI untuk membantu implementasi fitur satu per satu berdasarkan issue. Saya tidak langsung meminta AI membuat semua fitur sekaligus. Setiap hasil dari AI saya review, saya cek apakah masih sesuai PRD, lalu saya test manual di browser sebelum commit ke GitHub.
 
-## Where did AI make mistakes or give weak suggestions?
+## Bagaimana saya menggunakan AI saat testing?
 
-AI sempat menyarankan fitur yang terlalu besar untuk v1, seperti smart priority planner, reminder, deadline logic, dan automatic scheduling. Saya memutuskan untuk menunda fitur tersebut sebagai future improvement agar scope tetap realistis.
+Saya menggunakan AI sebagai TDD coach untuk membuat test pada dua behavior utama:
 
-## What did you verify manually?
+- menambahkan Course yang valid
+- menandai Study Session sebagai Completed
 
-Saya memverifikasi secara manual bahwa:
+Saya mengikuti proses RED, GREEN, dan REFACTOR. Hasil testing dan evidence saya dokumentasikan di `docs/05-tdd-and-testing.md`.
 
-- Course dapat dibuat.
-- Course duplikat ditolak.
-- Study Session dapat dibuat.
-- Study Session muncul di daftar.
-- Study Session dapat ditandai sebagai Completed.
-- Data tetap ada setelah refresh.
-- Error muncul saat input tidak valid.
-- Console browser tidak menampilkan error tak terduga.
-- UI tetap usable pada ukuran layar mobile.
+## Di mana AI membuat kesalahan atau memberi saran yang kurang tepat?
 
-## What software engineering decision are you most confident about?
+AI beberapa kali mengira file tertentu sudah tersedia di workspace, padahal file tersebut belum ada. AI juga kadang perlu diarahkan ulang agar tidak menambahkan fitur di luar scope PRD. Karena itu, saya tetap harus mengecek nama file, lokasi folder, branch GitHub, dan hasil implementasi secara manual.
 
-Saya paling yakin dengan keputusan menggunakan HTML, CSS, JavaScript vanilla, dan LocalStorage karena stack ini cukup sederhana untuk project dua hari dan tetap memenuhi kebutuhan utama aplikasi.
+## Apa saja yang saya verifikasi secara manual?
 
-## What would you improve with more time?
+Saya melakukan verifikasi manual untuk:
 
-Dengan waktu tambahan, saya ingin menambahkan fitur edit/delete Course, edit/delete Study Session, filter berdasarkan Course, reminder, dan smart priority planner.
+- membuat Course
+- melihat Course List
+- membuat Study Session
+- melihat Study Session List
+- menandai Study Session sebagai Completed
+- melihat validation error
+- memastikan data tetap ada setelah refresh
+- mengecek aplikasi di browser dan Chrome DevTools
+
+## Keputusan Software Engineering apa yang paling saya yakini?
+
+Saya paling yakin dengan keputusan untuk menjaga scope v1 tetap kecil dan sederhana. Dengan menggunakan HTML, CSS, JavaScript vanilla, dan LocalStorage, project ini tetap realistis untuk dikerjakan dalam waktu dua hari, tetapi masih cukup untuk menunjukkan proses Software Engineering dari requirements sampai testing dan delivery.
+
+## Apa yang akan saya tingkatkan jika punya lebih banyak waktu?
+
+Jika punya lebih banyak waktu, saya akan menambahkan fitur edit dan delete, memperbaiki tampilan UI, menambahkan lebih banyak automated test, meningkatkan responsive layout, dan mungkin menambahkan backend/database agar data bisa dipakai di lebih dari satu device.
