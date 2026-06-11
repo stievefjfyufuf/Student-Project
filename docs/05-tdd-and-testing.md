@@ -119,3 +119,51 @@ assets/screenshots/green-refactor-passing-test.png.jpeg
 * REFACTOR dilakukan untuk merapikan logic tanpa mengubah behavior.
 * Setelah refactor, semua test tetap pass.
 
+
+---
+
+## Browser and Chrome DevTools Verification
+
+### Main Flow
+
+Main flow berhasil diuji di browser.
+
+Flow yang diuji:
+
+- User membuat Course.
+- User melihat Course di Course List.
+- User membuat Study Session untuk Course tertentu.
+- User melihat Study Session di Study Session List.
+- User menandai Study Session sebagai Completed.
+- Setelah halaman di-refresh, data masih muncul.
+
+Screenshot evidence:
+
+```text
+assets/screenshots/app-working-browser.png
+
+Validation Error
+
+Validasi input berhasil diuji di browser.
+
+Error yang diuji:
+
+Course kosong menampilkan pesan error.
+Study Session dengan field kosong menampilkan pesan error.
+Input tidak valid menampilkan pesan error.
+
+Console Check
+
+Chrome DevTools Console dicek saat aplikasi dijalankan. Tidak ada error merah yang mengganggu main flow aplikasi.
+
+LocalStorage Check
+
+Data diuji secara manual dengan refresh browser. Course dan Study Session tetap muncul setelah halaman di-refresh, sehingga penyimpanan LocalStorage dianggap berjalan sesuai kebutuhan v1.
+
+Mobile Layout Check
+
+Layout aplikasi dicek pada tampilan browser yang diperkecil. Form dan daftar masih dapat digunakan.
+
+assets/screenshots/app-working-browser.png
+assets/screenshots/validation-error-browser.png
+
