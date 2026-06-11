@@ -1,7 +1,9 @@
 const COURSE_STORAGE_KEY = "courses";
+const STUDY_SESSION_STORAGE_KEY = "studySessions";
 
 const state = {
   courses: [],
+  studySessions: [],
 };
 
 const elements = {};
@@ -9,10 +11,11 @@ const elements = {};
 function initApp() {
   cacheElements();
   state.courses = loadCourses();
+  state.studySessions = loadStudySessions();
   bindEvents();
   renderCourseList();
   renderCourseOptions();
-  renderStudySessionPlaceholder();
+  renderStudySessionList();
 }
 
 function cacheElements() {
@@ -49,7 +52,26 @@ function handleCourseSubmit(event) {
 
 function handleStudySessionSubmit(event) {
   event.preventDefault();
-  showError("Study Session belum diimplementasikan pada Issue 3.");
+
+  const formData = new FormData(elements.studySessionForm);
+  const studySessionData = {
+    courseId: String(formData.get("courseId") || ""),
+    date: String(formData.get("date") || ""),
+    time: String(formData.get("time") || ""),
+    duration: String(formData.get("duration") || ""),
+    topic: String(formData.get("topic") || "").trim(),
+  };
+
+  const result = createStudySession(studySessionData);
+
+  if (!result.ok) {
+    showError(result.message);
+    return;
+  }
+
+  elements.studySessionForm.reset();
+  renderStudySessionList();
+  showSuccess("Study Session berhasil ditambahkan.");
 }
 
 function createCourse(name) {
@@ -98,6 +120,71 @@ function saveCourses(courses) {
   localStorage.setItem(COURSE_STORAGE_KEY, JSON.stringify(courses));
 }
 
+function loadStudySessions() {
+  try {
+    const storedStudySessions = localStorage.getItem(STUDY_SESSION_STORAGE_KEY);
+    return storedStudySessions ? JSON.parse(storedStudySessions) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveStudySessions(studySessions) {
+  localStorage.setItem(STUDY_SESSION_STORAGE_KEY, JSON.stringify(studySessions));
+}
+
+function createStudySession(data) {
+  const duration = Number(data.duration);
+
+  if (!data.courseId || !data.date || !data.time || !data.duration || !data.topic) {
+    return {
+      ok: false,
+      message: "Semua field Study Session wajib diisi.",
+    };
+  }
+
+  const courseExists = state.courses.some((course) => course.id === data.courseId);
+
+  if (!courseExists) {
+    return {
+      ok: false,
+      message: "Course yang dipilih tidak valid.",
+    };
+  }
+
+  if (!Number.isFinite(duration) || duration <= 0) {
+    return {
+      ok: false,
+      message: "Durasi harus lebih dari 0 menit.",
+    };
+  }
+
+  if (isPastDate(data.date)) {
+    return {
+      ok: false,
+      message: "Tanggal belajar tidak boleh di masa lalu.",
+    };
+  }
+
+  const studySession = {
+    id: createStudySessionId(),
+    courseId: data.courseId,
+    date: data.date,
+    time: data.time,
+    duration,
+    topic: data.topic,
+    status: "pending",
+  };
+
+  state.studySessions.push(studySession);
+  saveStudySessions(state.studySessions);
+
+  return {
+    ok: true,
+    studySession,
+  };
+}
+
 function renderCourseList() {
   if (state.courses.length === 0) {
     elements.courseList.innerHTML = '<li class="empty-state">Belum ada Course.</li>';
@@ -117,8 +204,36 @@ function renderCourseOptions() {
   elements.sessionCourse.innerHTML = `<option value="">Pilih Course</option>${options}`;
 }
 
-function renderStudySessionPlaceholder() {
-  elements.studySessionList.innerHTML = '<p class="empty-state">Study Session belum diimplementasikan.</p>';
+function renderStudySessionList() {
+  if (state.studySessions.length === 0) {
+    elements.studySessionList.innerHTML = '<p class="empty-state">Belum ada Study Session.</p>';
+    return;
+  }
+
+  elements.studySessionList.innerHTML = state.studySessions.map(renderStudySessionCard).join("");
+}
+
+function renderStudySessionCard(studySession) {
+  const course = state.courses.find((item) => item.id === studySession.courseId);
+  const courseName = course ? course.name : "Course tidak ditemukan";
+
+  return `
+    <article class="study-session-card">
+      <div class="session-card-header">
+        <div>
+          <h3>${escapeHtml(courseName)}</h3>
+          <p class="session-topic">${escapeHtml(studySession.topic)}</p>
+        </div>
+        <span class="status-badge pending">${escapeHtml(studySession.status)}</span>
+      </div>
+
+      <div class="session-meta">
+        <span>Date <strong>${formatDate(studySession.date)}</strong></span>
+        <span>Time <strong>${escapeHtml(studySession.time)}</strong></span>
+        <span>Duration <strong>${studySession.duration} min</strong></span>
+      </div>
+    </article>
+  `;
 }
 
 function showError(message) {
@@ -139,6 +254,34 @@ function createCourseId() {
   }
 
   return `course-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function createStudySessionId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+    return `session-${globalThis.crypto.randomUUID()}`;
+  }
+
+  return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function isPastDate(dateValue) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  const todayValue = `${year}-${month}-${day}`;
+
+  return dateValue < todayValue;
+}
+
+function formatDate(dateValue) {
+  const [year, month, day] = dateValue.split("-");
+
+  if (!year || !month || !day) {
+    return escapeHtml(dateValue);
+  }
+
+  return `${day}/${month}/${year}`;
 }
 
 function escapeHtml(value) {
