@@ -101,7 +101,7 @@ function createCourse(name) {
     };
   }
 
-  const isDuplicate = state.courses.some(
+  const isDuplicate = courses.some(
     (course) => course.name.toLowerCase() === name.toLowerCase()
   );
 
@@ -112,18 +112,25 @@ function createCourse(name) {
     };
   }
 
-  const course = {
-    id: createCourseId(),
-    name,
-  };
+  const updatedCourses = addCourse(state.courses, name);
+  const course = updatedCourses[updatedCourses.length - 1];
 
-  state.courses.push(course);
+  state.courses = updatedCourses;
   saveCourses(state.courses);
 
   return {
     ok: true,
     course,
   };
+}
+
+function addCourse(courses, name) {
+  const course = {
+    id: createCourseId(),
+    name,
+  };
+
+  return [...courses, course];
 }
 
 function loadCourses() {
@@ -221,13 +228,19 @@ function markStudySessionCompleted(studySessionId) {
     };
   }
 
-  studySession.status = "completed";
+  state.studySessions = markSessionCompleted(state.studySessions, studySessionId);
   saveStudySessions(state.studySessions);
 
   return {
     ok: true,
-    studySession,
+    studySession: state.studySessions.find((session) => session.id === studySessionId),
   };
+}
+
+function markSessionCompleted(sessions, studySessionId) {
+  return sessions.map((session) =>
+    session.id === studySessionId ? { ...session, status: "completed" } : session
+  );
 }
 
 function renderCourseList() {
@@ -344,4 +357,13 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-document.addEventListener("DOMContentLoaded", initApp);
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", initApp);
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    addCourse,
+    markSessionCompleted,
+  };
+}
