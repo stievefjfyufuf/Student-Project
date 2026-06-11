@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Planner</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="container header-content">
+        <div>
+          <p class="eyebrow">Manual study tracker</p>
+          <h1>Study Planner</h1>
+          <p class="header-copy">Catat course dan sesi belajar secara manual dalam satu halaman sederhana.</p>
+        </div>
+
+        <div class="scope-badges" aria-label="Scope aplikasi">
+          <span>LocalStorage</span>
+          <span>No login</span>
+          <span>Manual</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="container app-main">
+      <section class="panel message-panel" aria-labelledby="message-heading">
+        <div class="section-heading">
+          <p class="section-kicker">Validation</p>
+          <h2 id="message-heading">Error Message</h2>
+        </div>
+        <p id="error-message" class="message" role="alert" aria-live="polite">
+          Belum ada error.
+        </p>
+      </section>
+
+      <div class="two-column-layout">
+        <section class="panel" aria-labelledby="create-course-heading">
+          <div class="section-heading">
+            <p class="section-kicker">Step 1</p>
+            <h2 id="create-course-heading">Create Course</h2>
+          </div>
+
+          <form id="course-form" novalidate>
+            <div class="form-field">
+              <label for="course-name">Course Name</label>
+              <input
+                id="course-name"
+                name="courseName"
+                type="text"
+                autocomplete="off"
+                placeholder="Contoh: Software Engineering"
+              />
+            </div>
+
+            <button type="submit">Add Course</button>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="course-list-heading">
+          <div class="section-heading">
+            <p class="section-kicker">Overview</p>
+            <h2 id="course-list-heading">Course List</h2>
+          </div>
+
+          <ul id="course-list" class="course-list" aria-live="polite">
+            <li class="empty-state">Belum ada Course.</li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="create-session-heading">
+        <div class="section-heading">
+          <p class="section-kicker">Step 2</p>
+          <h2 id="create-session-heading">Create Study Session</h2>
+        </div>
+
+        <form id="study-session-form" class="study-session-form" novalidate>
+          <div class="form-field">
+            <label for="session-course">Course</label>
+            <select id="session-course" name="courseId">
+              <option value="">Pilih Course</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="session-date">Date</label>
+            <input id="session-date" name="date" type="date" />
+          </div>
+
+          <div class="form-field">
+            <label for="session-time">Time</label>
+            <input id="session-time" name="time" type="time" />
+          </div>
+
+          <div class="form-field">
+            <label for="session-duration">Duration (minutes)</label>
+            <input
+              id="session-duration"
+              name="duration"
+              type="number"
+              min="1"
+              placeholder="Contoh: 60"
+            />
+          </div>
+
+          <div class="form-field form-field-full">
+            <label for="session-topic">Topic</label>
+            <input
+              id="session-topic"
+              name="topic"
+              type="text"
+              autocomplete="off"
+              placeholder="Contoh: Writing PRD"
+            />
+          </div>
+
+          <button type="submit">Add Study Session</button>
+        </form>
+      </section>
+
+      <section class="panel" aria-labelledby="session-list-heading">
+        <div class="section-heading">
+          <p class="section-kicker">Tracking</p>
+          <h2 id="session-list-heading">Study Session List</h2>
+        </div>
+
+        <div id="study-session-list" class="study-session-list" aria-live="polite">
+          <p class="empty-state">Belum ada Study Session.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
