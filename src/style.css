@@ -220,11 +220,23 @@ button:hover {
 }
 
 .course-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--background-soft);
   font-weight: 700;
   padding: 12px 14px;
+}
+
+.course-item::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+  flex: 0 0 auto;
 }
 
 .study-session-list {
